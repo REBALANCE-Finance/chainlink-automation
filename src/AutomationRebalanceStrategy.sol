@@ -31,7 +31,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface {
 
     function performUpkeep(bytes calldata performData) external override {
         IProvider newProvider = abi.decode(performData, (IProvider));
-        emit UpkeepPerformed(newProvider);  // remove
+        emit UpkeepPerformed(newProvider);
     }
 
     function shouldRebalance() public view returns (bool should, IProvider newProvider) {
