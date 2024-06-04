@@ -4,14 +4,17 @@ pragma solidity ^0.8.23;
 import {AutomationCompatibleInterface} from "chainlink/v0.8/automation/AutomationCompatible.sol";
 import {IProvider} from "./interfaces/IProvider.sol";
 import {IInterestVault} from "./interfaces/IInterestVault.sol";
+import {IRebalancerManager} from "./interfaces/IRebalancerManager.sol";
 
 contract RebalanceStrategy is AutomationCompatibleInterface {
     IInterestVault public vault;
+    IRebalancerManager public rebalancerManager;
     
     event UpkeepPerformed(IProvider newProvider);
 
-    constructor(IInterestVault _vault) {
+    constructor(IInterestVault _vault, IRebalancerManager _rebalancerManager) {
         vault = _vault;
+        rebalancerManager = _rebalancerManager;
     }
 
     function checkUpkeep(
@@ -31,6 +34,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface {
 
     function performUpkeep(bytes calldata performData) external override {
         IProvider newProvider = abi.decode(performData, (IProvider));
+        rebalancerManager.rebalanceVault(vault, type(uint256).max, vault.activeProvider(), newProvider, 0, true);
         emit UpkeepPerformed(newProvider);
     }
 
