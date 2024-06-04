@@ -49,23 +49,6 @@ contract AutomationRebalanceStrategyTest is Test {
         assertEq(should, activeProvider.getDepositRateFor(strategy.vault()) != newProvider.getDepositRateFor(strategy.vault()));
     }
 
-    // function test_ShouldRebalanceWhenNotBest() public view {
-    //     // set provider rates artificially
-    //     IProvider[] memory providers = strategy.vault().getProviders();
-    //     // TODO: set rates for each provider
-    //     // Aave
-    //     // getDepositRatesFor(vault) calls 0x794a61358D6845594F94dc1DB02A252b5b4814aD.getReserveData(vault.asset())
-    //     // which returns a ReserveData struct: https://arbiscan.io/address/0x03e8c5cd5e194659b16456bb43dd5d38886fe541#code#F45#L1
-    //     // which has a variable currentLiquidityRate
-    //     // Radiant
-    //     // same but 0xF4B1486DD74D07706052A33d31d7c0AAFD0659E1
-    //     // DForce
-    //     // more complicated: https://arbiscan.io/address/0x2c17806FF8bE2f9507AA75E3857eB49E8185ca70#code#F14#L122
-    //     // Compound
-    //     // more complicated with CometInterface cMarketV3.getUtilization() etc:
-    //     // https://arbiscan.io/address/0x7Ff252970E13A49B3070E199C82786Eb54c76030#code#F8#L67
-    // }
-
     function test_CheckUpkeep() public view {
         IProvider activeProvider = strategy.vault().activeProvider();
         (bool upkeepNeeded, bytes memory performData) = strategy.checkUpkeep("");
