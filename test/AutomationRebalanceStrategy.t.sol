@@ -3,6 +3,7 @@ pragma solidity ^0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {RebalanceStrategy} from "../src/AutomationRebalanceStrategy.sol";
+import {IRebalancerManager} from "../src/interfaces/IRebalancerManager.sol";
 import {IInterestVault} from "../src/interfaces/IInterestVault.sol";
 import {IProvider} from "../src/interfaces/IProvider.sol";
 
@@ -12,8 +13,9 @@ contract AutomationRebalanceStrategyTest is Test {
     event UpkeepPerformed(IProvider newProvider);
 
     function setUp() public {
-        IInterestVault vault = IInterestVault(0xD430e22c3a0F8Ebd6813411084a5cb26937f6661);
-        strategy = new RebalanceStrategy(vault);
+        IInterestVault vault = IInterestVault(0xD430e22c3a0F8Ebd6813411084a5cb26937f6661);  // USDC.e
+        IRebalancerManager manager = IRebalancerManager(0x7912C6906649D582dD8928fC121D35f4b3B9fEF2);
+        strategy = new RebalanceStrategy(vault, manager);
     }
 
     function test_HasProviders() public view {
@@ -54,14 +56,23 @@ contract AutomationRebalanceStrategyTest is Test {
         (bool upkeepNeeded, bytes memory performData) = strategy.checkUpkeep("");
         if (upkeepNeeded) {
             IProvider newProvider = abi.decode(performData, (IProvider));
-            assertTrue(newProvider != activeProvider);
+            assertTrue(newProvider != activeProvider, "new provider same as active provider");
         }
     }
 
     function test_PerformUpkeep() public {
+        IProvider[] memory providers = strategy.vault().getProviders();
         IProvider provider = strategy.vault().activeProvider();
+        // find a provider that is not active provider
+        for (uint256 i = 0; i < providers.length; i++) {
+            if (providers[i] != provider) {
+                provider = providers[i];
+                break;
+            }
+        }
         vm.expectEmit(true, true, true, true);
         emit UpkeepPerformed(provider);
         strategy.performUpkeep(abi.encode(provider));
+        assertEq(address(strategy.vault().activeProvider()), address(provider), "active provider not updated");
     }
 }

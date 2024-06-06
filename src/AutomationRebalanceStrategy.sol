@@ -17,6 +17,12 @@ contract RebalanceStrategy is AutomationCompatibleInterface {
         rebalancerManager = _rebalancerManager;
     }
 
+    function performUpkeep(bytes calldata performData) external override {
+        IProvider newProvider = abi.decode(performData, (IProvider));
+        rebalancerManager.rebalanceVault(vault, type(uint256).max, vault.activeProvider(), newProvider, 0, true);
+        emit UpkeepPerformed(newProvider);
+    }
+
     function checkUpkeep(
         bytes calldata /* checkData */
     )
@@ -30,12 +36,6 @@ contract RebalanceStrategy is AutomationCompatibleInterface {
         if (upkeepNeeded) {
             performData = abi.encode(newProvider);
         }
-    }
-
-    function performUpkeep(bytes calldata performData) external override {
-        IProvider newProvider = abi.decode(performData, (IProvider));
-        rebalancerManager.rebalanceVault(vault, type(uint256).max, vault.activeProvider(), newProvider, 0, true);
-        emit UpkeepPerformed(newProvider);
     }
 
     function shouldRebalance() public view returns (bool should, IProvider newProvider) {
