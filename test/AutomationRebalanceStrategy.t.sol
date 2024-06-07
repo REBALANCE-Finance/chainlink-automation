@@ -17,9 +17,9 @@ contract RebalanceStrategyTest is Test {
     event AllowExecutor(address indexed executor, bool allowed);
 
     function setUp() public {
-        forkId = vm.createSelectFork(vm.rpcUrl("arbitrum"));
-        vault = IInterestVault(0xD430e22c3a0F8Ebd6813411084a5cb26937f6661);  // USDC.e
-        manager = IRebalancerManager(0x7912C6906649D582dD8928fC121D35f4b3B9fEF2);
+        forkId = vm.createSelectFork(vm.envString("RPC_URL"));
+        vault = IInterestVault(vm.envAddress("VAULT"));
+        manager = IRebalancerManager(vm.envAddress("REBALANCER_MANAGER"));
         strategy = new RebalanceStrategy(vault, manager);
     }
 
