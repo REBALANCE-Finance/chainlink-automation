@@ -7,7 +7,7 @@ import {IRebalancerManager} from "../src/interfaces/IRebalancerManager.sol";
 import {IInterestVault} from "../src/interfaces/IInterestVault.sol";
 import {IProvider} from "../src/interfaces/IProvider.sol";
 
-contract AutomationRebalanceStrategyTest is Test {
+contract RebalanceStrategyTest is Test {
     uint256 forkId;
     RebalanceStrategy public strategy;
     IRebalancerManager public manager;
