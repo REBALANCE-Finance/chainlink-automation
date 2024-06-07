@@ -8,6 +8,7 @@ import {IInterestVault} from "../src/interfaces/IInterestVault.sol";
 import {IProvider} from "../src/interfaces/IProvider.sol";
 
 contract AutomationRebalanceStrategyTest is Test {
+    uint256 forkId;
     RebalanceStrategy public strategy;
     IRebalancerManager public manager;
     IInterestVault public vault;
@@ -16,6 +17,7 @@ contract AutomationRebalanceStrategyTest is Test {
     event AllowExecutor(address indexed executor, bool allowed);
 
     function setUp() public {
+        forkId = vm.createSelectFork(vm.rpcUrl("arbitrum"));
         vault = IInterestVault(0xD430e22c3a0F8Ebd6813411084a5cb26937f6661);  // USDC.e
         manager = IRebalancerManager(0x7912C6906649D582dD8928fC121D35f4b3B9fEF2);
         strategy = new RebalanceStrategy(vault, manager);
@@ -23,12 +25,12 @@ contract AutomationRebalanceStrategyTest is Test {
 
     function test_HasProviders() public view {
         IProvider[] memory providers = strategy.vault().getProviders();
-        assertGt(providers.length, 0);
+        assertGt(providers.length, 0, "no providers");
     }
 
     function test_GetsDepositRates() public view {
         uint256[] memory rates = strategy.depositRates();
-        assertGt(rates.length, 0);
+        assertGt(rates.length, 0, "no deposit rates");
     }
 
     function test_ShouldRebalanceCurrent() public view {
@@ -47,11 +49,11 @@ contract AutomationRebalanceStrategyTest is Test {
         // check that the best provider indeed has rate higher than every other
         for (uint256 i = 0; i < rates.length; i++) {
             if (i != iBestProvider) {
-                assertGt(rates[iBestProvider], rates[i]);
+                assertGt(rates[iBestProvider], rates[i], "best provider rate not highest");
             }
         }
         // check that should=true only when activeProvider rate is different than newProvider
-        assertEq(should, activeProvider.getDepositRateFor(strategy.vault()) != newProvider.getDepositRateFor(strategy.vault()));
+        assertEq(should, activeProvider.getDepositRateFor(strategy.vault()) != newProvider.getDepositRateFor(strategy.vault()), "wrong should value");
     }
 
     function test_CheckUpkeep() public view {
