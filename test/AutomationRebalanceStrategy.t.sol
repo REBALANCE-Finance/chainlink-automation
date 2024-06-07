@@ -9,12 +9,15 @@ import {IProvider} from "../src/interfaces/IProvider.sol";
 
 contract AutomationRebalanceStrategyTest is Test {
     RebalanceStrategy public strategy;
+    IRebalancerManager public manager;
+    IInterestVault public vault;
 
     event UpkeepPerformed(IProvider newProvider);
+    event AllowExecutor(address indexed executor, bool allowed);
 
     function setUp() public {
-        IInterestVault vault = IInterestVault(0xD430e22c3a0F8Ebd6813411084a5cb26937f6661);  // USDC.e
-        IRebalancerManager manager = IRebalancerManager(0x7912C6906649D582dD8928fC121D35f4b3B9fEF2);
+        vault = IInterestVault(0xD430e22c3a0F8Ebd6813411084a5cb26937f6661);  // USDC.e
+        manager = IRebalancerManager(0x7912C6906649D582dD8928fC121D35f4b3B9fEF2);
         strategy = new RebalanceStrategy(vault, manager);
     }
 
@@ -61,6 +64,13 @@ contract AutomationRebalanceStrategyTest is Test {
     }
 
     function test_PerformUpkeep() public {
+        // set strategy as executor in RebalancerManager
+        vm.startPrank(0xc8a682F0991323777253ffa5fa6F19035685E723);
+        vm.expectEmit(true, true, true, true);
+        emit AllowExecutor(address(strategy), true);
+        manager.allowExecutor(address(strategy), true);
+        vm.stopPrank();
+
         IProvider[] memory providers = strategy.vault().getProviders();
         IProvider provider = strategy.vault().activeProvider();
         // find a provider that is not active provider
@@ -70,6 +80,7 @@ contract AutomationRebalanceStrategyTest is Test {
                 break;
             }
         }
+        // rebalance to the new provider
         vm.expectEmit(true, true, true, true);
         emit UpkeepPerformed(provider);
         strategy.performUpkeep(abi.encode(provider));
