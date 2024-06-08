@@ -23,6 +23,13 @@ contract RebalanceStrategyTest is Test {
         strategy = new RebalanceStrategy(vault, manager);
     }
 
+    function test_CanSetForwarder() public {
+        strategy.setForwarder(address(this));
+        assertEq(strategy.forwarder(), address(this), "forwarder not set");
+    }
+
+    // TODO: test it cannot set it twice
+
     function test_HasProviders() public view {
         IProvider[] memory providers = strategy.vault().getProviders();
         assertGt(providers.length, 0, "no providers");
@@ -65,6 +72,12 @@ contract RebalanceStrategyTest is Test {
         }
     }
 
+    function test_CannotPerformUpkeepIfNotForwarder() public {
+        IProvider[] memory providers = strategy.vault().getProviders();
+        vm.expectRevert("Only the forwarder can call this function");
+        strategy.performUpkeep(abi.encode(providers[0]));
+    }
+
     function test_PerformUpkeep() public {
         // set strategy as executor in RebalancerManager
         vm.startPrank(0xc8a682F0991323777253ffa5fa6F19035685E723);
@@ -72,10 +85,12 @@ contract RebalanceStrategyTest is Test {
         emit AllowExecutor(address(strategy), true);
         manager.allowExecutor(address(strategy), true);
         vm.stopPrank();
-
+        // set forwarder
+        strategy.setForwarder(address(this));
+        // get providers
         IProvider[] memory providers = strategy.vault().getProviders();
         IProvider provider = strategy.vault().activeProvider();
-        // find a provider that is not active provider
+        // find a provider that is not the active provider
         for (uint256 i = 0; i < providers.length; i++) {
             if (providers[i] != provider) {
                 provider = providers[i];

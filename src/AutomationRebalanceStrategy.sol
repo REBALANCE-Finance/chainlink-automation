@@ -9,6 +9,7 @@ import {IRebalancerManager} from "./interfaces/IRebalancerManager.sol";
 contract RebalanceStrategy is AutomationCompatibleInterface {
     IInterestVault public vault;
     IRebalancerManager public rebalancerManager;
+    address public forwarder;
     
     event UpkeepPerformed(IProvider newProvider);
 
@@ -17,7 +18,13 @@ contract RebalanceStrategy is AutomationCompatibleInterface {
         rebalancerManager = _rebalancerManager;
     }
 
+    function setForwarder(address _forwarder) external {
+        require(forwarder == address(0), "Forwarder already set");
+        forwarder = _forwarder;
+    }
+
     function performUpkeep(bytes calldata performData) external override {
+        require(msg.sender == forwarder, "Only the forwarder can call this function");
         IProvider newProvider = abi.decode(performData, (IProvider));
         rebalancerManager.rebalanceVault(vault, type(uint256).max, vault.activeProvider(), newProvider, 0, true);
         emit UpkeepPerformed(newProvider);
