@@ -6,11 +6,17 @@ import {IProvider} from "./interfaces/IProvider.sol";
 import {IInterestVault} from "./interfaces/IInterestVault.sol";
 import {IRebalancerManager} from "./interfaces/IRebalancerManager.sol";
 
+// This contract implements a rebalancing strategy for an interest vault.
+// It is designed to be integrated with Chainlink Automation.
 contract RebalanceStrategy is AutomationCompatibleInterface {
+    // The interest vault to manage
     IInterestVault public vault;
+    // The rebalancer manager responsible for the rebalancing process
     IRebalancerManager public rebalancerManager;
+    // The address of Chainlink's Forwarder contract that will be used to trigger performUpkeep()
     address public forwarder;
-    
+
+    // Event emitted when rebalance is performed
     event UpkeepPerformed(IProvider newProvider);
 
     constructor(IInterestVault _vault, IRebalancerManager _rebalancerManager) {
@@ -18,11 +24,13 @@ contract RebalanceStrategy is AutomationCompatibleInterface {
         rebalancerManager = _rebalancerManager;
     }
 
+    // Called only once when Chainlink Upkeep is set up
     function setForwarder(address _forwarder) external {
         require(forwarder == address(0), "Forwarder already set");
         forwarder = _forwarder;
     }
 
+    // Function called by Chainlink to perform the upkeep, i.e. rebalance the vault
     function performUpkeep(bytes calldata performData) external override {
         require(msg.sender == forwarder, "Only the forwarder can call this function");
         IProvider newProvider = abi.decode(performData, (IProvider));
@@ -30,6 +38,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface {
         emit UpkeepPerformed(newProvider);
     }
 
+    // Function called by Chainlink to check whether it needs to perform the upkeep (rebalance)
     function checkUpkeep(
         bytes calldata /* checkData */
     )
@@ -45,6 +54,8 @@ contract RebalanceStrategy is AutomationCompatibleInterface {
         }
     }
 
+    // Function to check whether a rebalancing is needed
+    // It aims to rebalance to another provider as soon as its deposit rate is the highest
     function shouldRebalance() public view returns (bool should, IProvider newProvider) {
         IProvider[] memory providers = vault.getProviders();
         uint256[] memory rates = depositRates();
@@ -67,6 +78,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface {
         }
     }
 
+    // Get deposit rates for each provider, in the same order as getProviders()
     function depositRates() public view returns (uint256[] memory rates) {
         IProvider[] memory providers = vault.getProviders();
         rates = new uint256[](providers.length);
