@@ -28,7 +28,11 @@ contract RebalanceStrategyTest is Test {
         assertEq(strategy.forwarder(), address(this), "forwarder not set");
     }
 
-    // TODO: test it cannot set it twice
+    function test_CannotSetForwarderTwice() public {
+        strategy.setForwarder(address(this));
+        vm.expectRevert("Forwarder already set");
+        strategy.setForwarder(address(this));
+    }
 
     function test_HasProviders() public view {
         IProvider[] memory providers = strategy.vault().getProviders();
