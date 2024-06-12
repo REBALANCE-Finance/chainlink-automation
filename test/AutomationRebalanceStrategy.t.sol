@@ -7,47 +7,60 @@ import {IRebalancerManager} from "../src/interfaces/IRebalancerManager.sol";
 import {IInterestVault} from "../src/interfaces/IInterestVault.sol";
 import {IProvider} from "../src/interfaces/IProvider.sol";
 
+// Test for RebalanceStrategy
 contract RebalanceStrategyTest is Test {
-    uint256 forkId;
-    RebalanceStrategy public strategy;
-    IRebalancerManager public manager;
-    IInterestVault public vault;
+    RebalanceStrategy public strategy;  // instance of RebalanceStrategy used in tests
+    IRebalancerManager public manager;  // RebalancerManager strategy uses
+    IInterestVault public vault;        // InterestVault strategy manages
 
+    // Event expected to be emitted by RebalanceStrategy.performUpkeep()
     event UpkeepPerformed(IProvider newProvider);
+    // Event expected to be emitted by RebalancerManager.allowExecutor()
     event AllowExecutor(address indexed executor, bool allowed);
 
+    // Called before each test
     function setUp() public {
-        forkId = vm.createSelectFork(vm.envString("RPC_URL"));
+        // set up a fork of the network to test on live contracts
+        vm.createSelectFork(vm.envString("RPC_URL"));
+        // get the vault and the manager contracts
         vault = IInterestVault(vm.envAddress("VAULT"));
         manager = IRebalancerManager(vm.envAddress("REBALANCER_MANAGER"));
+        // instantiate strategy with the vault and the manager
         strategy = new RebalanceStrategy(vault, manager);
     }
 
+    // Should be able to set the forwarder
     function test_CanSetForwarder() public {
         strategy.setForwarder(address(this));
         assertEq(strategy.forwarder(), address(this), "forwarder not set");
     }
 
+    // Should only be able to set the forwarder once
     function test_CannotSetForwarderTwice() public {
         strategy.setForwarder(address(this));
         vm.expectRevert("Forwarder already set");
         strategy.setForwarder(address(this));
     }
 
+    // Should be able to get providers from the vault
     function test_HasProviders() public view {
         IProvider[] memory providers = strategy.vault().getProviders();
         assertGt(providers.length, 0, "no providers");
     }
 
+    // Should be able to get current deposit rates for each provider
     function test_GetsDepositRates() public view {
         uint256[] memory rates = strategy.depositRates();
         assertGt(rates.length, 0, "no deposit rates");
     }
 
+    // Should be able to check if a rebalancing is needed
     function test_ShouldRebalanceCurrent() public view {
+        // get providers and rates
         IProvider[] memory providers = strategy.vault().getProviders();
         IProvider activeProvider = strategy.vault().activeProvider();
         uint256[] memory rates = strategy.depositRates();
+        // check what strategy is saying
         (bool should, IProvider newProvider) = strategy.shouldRebalance();
         // find the iBestProvider of newProvider in providers
         uint256 iBestProvider;
@@ -67,29 +80,33 @@ contract RebalanceStrategyTest is Test {
         assertEq(should, activeProvider.getDepositRateFor(strategy.vault()) != newProvider.getDepositRateFor(strategy.vault()), "wrong should value");
     }
 
+    // Should execute checkUpkeep() correctly
     function test_CheckUpkeep() public view {
         IProvider activeProvider = strategy.vault().activeProvider();
         (bool upkeepNeeded, bytes memory performData) = strategy.checkUpkeep("");
         if (upkeepNeeded) {
+            // if upkeep is needed, the new provider should be different from the active provider
             IProvider newProvider = abi.decode(performData, (IProvider));
             assertTrue(newProvider != activeProvider, "new provider same as active provider");
         }
     }
 
+    // Should only be able to perform upkeep by the forwarder
     function test_CannotPerformUpkeepIfNotForwarder() public {
         IProvider[] memory providers = strategy.vault().getProviders();
         vm.expectRevert("Only the forwarder can call this function");
         strategy.performUpkeep(abi.encode(providers[0]));
     }
 
+    // Should perform upkeep correctly
     function test_PerformUpkeep() public {
-        // set strategy as executor in RebalancerManager
+        // set strategy as executor in RebalancerManager, impersonating the admin of RebalancerManager
         vm.startPrank(vm.envAddress("REBALANCER_MANAGER_ADMIN"));
         vm.expectEmit(true, true, true, true);
         emit AllowExecutor(address(strategy), true);
         manager.allowExecutor(address(strategy), true);
         vm.stopPrank();
-        // set forwarder
+        // set this test contract as the forwarder to perform the upkeep
         strategy.setForwarder(address(this));
         // get providers
         IProvider[] memory providers = strategy.vault().getProviders();
@@ -101,10 +118,11 @@ contract RebalanceStrategyTest is Test {
                 break;
             }
         }
-        // rebalance to the new provider
+        // rebalance to the other provider
         vm.expectEmit(true, true, true, true);
         emit UpkeepPerformed(provider);
         strategy.performUpkeep(abi.encode(provider));
         assertEq(address(strategy.vault().activeProvider()), address(provider), "active provider not updated");
     }
 }
+
