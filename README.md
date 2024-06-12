@@ -16,13 +16,21 @@ RebalanceStrategy must have the Executor role in RebalancerManager. After deploy
 
 1. [Install Foundry](https://book.getfoundry.sh/getting-started/installation)
 
-2. Clone this repository:
+## Setup
+
+1. Clone this repository:
 
     `git clone https://github.com/REBALANCE-Finance/chainlink-automation.git`
 
-3. Install dependencies:
+1. Install dependencies:
     
     `forge install`
+
+1. Create `.env` file from `.env.example`:
+
+    `cp .env.example .env`
+
+1. Update `.env` file with your values if needed.
 
 ## How to test
 
@@ -34,14 +42,14 @@ RebalanceStrategy must have the Executor role in RebalancerManager. After deploy
 
 1. Deploy the RebalanceStrategy contract, setting the right Vault and RebalancerManager.
 
-2. Create Chainlink Upkeep with Custom Logic and set the RebalanceStrategy address.
+1. Create Chainlink Upkeep with Custom Logic and set the RebalanceStrategy address.
 
-3. Get the Forwarder address from the Chainlink Upkeep.
+1. Get the Forwarder address from the Chainlink Upkeep.
 
-4. Set the Forwarder address in the RebalanceStrategy contract by calling `setForwarder(address)`.
+1. Set the Forwarder address in the RebalanceStrategy contract by calling `setForwarder(address)`.
 
-5. Grant the Executor role to RebalanceStrategy in the RebalancerManager contract.
+1. Grant the Executor role to RebalanceStrategy in the RebalancerManager contract.
 
-5. Fund the Upkeep with LINK.
+1. Fund the Upkeep with LINK.
 
 6. Run the Upkeep.
