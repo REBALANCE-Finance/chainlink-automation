@@ -84,7 +84,7 @@ contract RebalanceStrategyTest is Test {
 
     function test_PerformUpkeep() public {
         // set strategy as executor in RebalancerManager
-        vm.startPrank(0xc8a682F0991323777253ffa5fa6F19035685E723);
+        vm.startPrank(vm.envAddress("REBALANCER_MANAGER_ADMIN"));
         vm.expectEmit(true, true, true, true);
         emit AllowExecutor(address(strategy), true);
         manager.allowExecutor(address(strategy), true);
