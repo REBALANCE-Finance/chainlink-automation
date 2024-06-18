@@ -16,6 +16,8 @@ RebalanceStrategy must have the Executor role in RebalancerManager. After deploy
 
 1. [Install Foundry](https://book.getfoundry.sh/getting-started/installation)
 
+1. Have some LINK in your wallet
+
 ## Setup
 
 1. Clone this repository:
@@ -40,13 +42,32 @@ RebalanceStrategy must have the Executor role in RebalancerManager. After deploy
 
 ## How to use
 
-1. Deploy the RebalanceStrategy contract, setting the right Vault and RebalancerManager.
+Every Vault should have its own instance of RebalanceStrategy. RebalancerManager is one for all Vaults.
 
-1. Create Chainlink Upkeep with Custom Logic and set the RebalanceStrategy address.
+1. Make sure you've set the right Vault and RebalancerManager in `.env`. Load environment variables:
+
+    `source .env`
+
+1. Deploy the RebalanceStrategy contract:
+
+    ```
+    forge create --rpc-url $RPC_URL \
+                 --constructor-args $VAULT $REBALANCER_MANAGER \
+                 --private-key <YOUR_PRIVATE_KEY> \
+                 --etherscan-api-key <YOUR_ETHERSCAN_API_KEY> \
+                 --verify \
+                 src/AutomationRebalanceStrategy.sol:RebalanceStrategy
+    ```
+
+1. Create Chainlink Upkeep with Custom Logic and set the deployed RebalanceStrategy address.
 
 1. Get the Forwarder address from the Chainlink Upkeep.
 
-1. Set the Forwarder address in the RebalanceStrategy contract by calling `setForwarder(address)`.
+1. Set the Forwarder address in the RebalanceStrategy contract by calling `setForwarder(address)`:
+
+    ```
+    cast send --private-key <YOUR_PRIVATE_KEY> --rpc-url $RPC_URL <STRATEGY_ADDRESS> "setForwarder(address)" <FORWARDER_ADDRESS>
+    ```
 
 1. Grant the Executor role to RebalanceStrategy in the RebalancerManager contract.
 
