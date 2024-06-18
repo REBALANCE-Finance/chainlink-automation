@@ -74,3 +74,15 @@ Every Vault should have its own instance of RebalanceStrategy. RebalancerManager
 1. Fund the Upkeep with LINK.
 
 6. Run the Upkeep.
+
+## Changing the strategy settings
+
+1. Call `updateSettings()` with new values:
+
+    ```
+    cast send --private-key <YOUR_PRIVATE_KEY> --rpc-url $RPC_URL <STRATEGY_ADDRESS> "updateSettings(uint256,uint256)" <MIN_INTERVAL> <MIN_DELTA_RATE>
+    ```
+
+    Settings:
+    - `MIN_INTERVAL`: minimal rebalance interval in seconds
+    - `MIN_DELTA_RATE`: minimal interest rate delta in ray uints, i.e. 1% = 0.01 * 10^27
