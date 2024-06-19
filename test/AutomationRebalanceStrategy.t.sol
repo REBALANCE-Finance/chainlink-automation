@@ -78,7 +78,7 @@ contract RebalanceStrategyTest is Test {
     }
 
     // Should be able to check if a rebalancing is needed
-    function test_ShouldRebalanceCurrent() public view {
+    function test_CanCheckIfShouldRebalance() public view {
         // get providers and rates
         IProvider[] memory providers = strategy.vault().getProviders();
         IProvider activeProvider = strategy.vault().activeProvider();
@@ -99,12 +99,21 @@ contract RebalanceStrategyTest is Test {
                 assertGt(rates[iBestProvider], rates[i], "best provider rate not highest");
             }
         }
-        // check that should=true only when activeProvider rate is different than newProvider
-        assertEq(should, activeProvider.getDepositRateFor(strategy.vault()) != newProvider.getDepositRateFor(strategy.vault()), "wrong should value");
+        // check if should rebalance
+        uint256 rateActive = activeProvider.getDepositRateFor(strategy.vault());
+        uint256 rateHighest = newProvider.getDepositRateFor(strategy.vault());
+        if (
+            strategy.lastRebalance() + strategy.minRebalanceInterval() <= block.timestamp &&
+            rateHighest - rateActive >= strategy.minRebalanceDeltaRate()
+        ) {
+            assertEq(should, true, "should rebalance is false");
+        } else {
+            assertEq(should, false, "should rebalance is true");
+        }
     }
 
     // Should execute checkUpkeep() correctly
-    function test_CheckUpkeep() public view {
+    function test_CanCheckUpkeep() public view {
         IProvider activeProvider = strategy.vault().activeProvider();
         (bool upkeepNeeded, bytes memory performData) = strategy.checkUpkeep("");
         if (upkeepNeeded) {
@@ -122,7 +131,7 @@ contract RebalanceStrategyTest is Test {
     }
 
     // Should perform upkeep correctly
-    function test_PerformUpkeep() public {
+    function test_CanPerformUpkeep() public {
         // set strategy as executor in RebalancerManager, impersonating the admin of RebalancerManager
         vm.startPrank(vm.envAddress("REBALANCER_MANAGER_ADMIN"));
         vm.expectEmit(true, true, true, true);
