@@ -13,6 +13,9 @@ contract RebalanceStrategyTest is Test {
     IRebalancerManager public manager;  // RebalancerManager strategy uses
     IInterestVault public vault;        // InterestVault strategy manages
 
+    // Error thrown by Ownable.onlyOwner
+    error OwnableUnauthorizedAccount(address account);
+
     // Event expected to be emitted by RebalanceStrategy.performUpkeep()
     event UpkeepPerformed(IProvider newProvider);
     // Event expected to be emitted by RebalancerManager.allowExecutor()
@@ -35,11 +38,31 @@ contract RebalanceStrategyTest is Test {
         assertEq(strategy.forwarder(), address(this), "forwarder not set");
     }
 
-    // Should only be able to set the forwarder once
-    function test_CannotSetForwarderTwice() public {
+    // Should not be able to set the forwarder if not the owner
+    function test_CannotSetForwarderIfNotOwner() public {
+        bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+        vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
+        vm.prank(address(0));
         strategy.setForwarder(address(this));
-        vm.expectRevert("Forwarder already set");
-        strategy.setForwarder(address(this));
+    }
+
+    // Should be able to update settings successfully
+    function test_CanUpdateSettings() public {
+        uint256 t = strategy.minRebalanceInterval() + 1;
+        uint256 d = strategy.minRebalanceDeltaRate() + 1;
+        vm.expectEmit(true, true, true, true);
+        emit RebalanceStrategy.SettingsUpdated(t, d);
+        strategy.updateSettings(t, d);
+        assertEq(strategy.minRebalanceInterval(), t, "minRebalanceInterval not updated correctly");
+        assertEq(strategy.minRebalanceDeltaRate(), d, "minRebalanceDeltaRate not updated correctly");
+    }
+
+    // Should not be able to update settings if not the owner
+    function test_CannotUpdateSettingsIfNotOwner() public {
+        bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+        vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
+        vm.prank(address(0));
+        strategy.updateSettings(0, 0);
     }
 
     // Should be able to get providers from the vault
