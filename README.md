@@ -10,7 +10,7 @@ The strategy can only be used by Chainlink Forwarder. Chainlink creates a new Fo
 
 The RebalanceStrategy contract does not have any admin access. `setForwarder()` can only be called once, so once it's set, no one can affect the behavior of the contract. If you want to create a new Upkeep, you will have to deploy a new RebalanceStrategy contract.
 
-RebalanceStrategy must have the Executor role in RebalancerManager. After deploying the RebalanceStrategy contract and setting the Forwarder, make sure to grant it the Executor role in the RebalancerManager contract.
+RebalanceStrategy must have the Executor role in VaultManager. After deploying the RebalanceStrategy contract and setting the Forwarder, make sure to grant it the Executor role in the VaultManager contract.
 
 ## Prerequisites
 
@@ -42,9 +42,9 @@ RebalanceStrategy must have the Executor role in RebalancerManager. After deploy
 
 ## How to use
 
-Every Vault should have its own instance of RebalanceStrategy. RebalancerManager is one for all Vaults.
+Every Vault should have its own instance of RebalanceStrategy. VaultManager is one for all Vaults.
 
-1. Make sure you've set the right Vault and RebalancerManager in `.env`. Load environment variables:
+1. Make sure you've set the right Vault and VaultManager in `.env`. Load environment variables:
 
     `source .env`
 
@@ -52,7 +52,7 @@ Every Vault should have its own instance of RebalanceStrategy. RebalancerManager
 
     ```
     forge create --rpc-url $RPC_URL \
-                 --constructor-args $VAULT $REBALANCER_MANAGER \
+                 --constructor-args $VAULT $VAULT_MANAGER \
                  --private-key <YOUR_PRIVATE_KEY> \
                  --etherscan-api-key <YOUR_ETHERSCAN_API_KEY> \
                  --verify \
@@ -69,7 +69,7 @@ Every Vault should have its own instance of RebalanceStrategy. RebalancerManager
     cast send --private-key <YOUR_PRIVATE_KEY> --rpc-url $RPC_URL <STRATEGY_ADDRESS> "setForwarder(address)" <FORWARDER_ADDRESS>
     ```
 
-1. Grant the Executor role to RebalanceStrategy in the RebalancerManager contract.
+1. Grant the Executor role to RebalanceStrategy in the VaultManager contract.
 
 1. Fund the Upkeep with LINK.
 

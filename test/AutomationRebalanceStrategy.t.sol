@@ -3,23 +3,15 @@ pragma solidity ^0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {RebalanceStrategy} from "../src/AutomationRebalanceStrategy.sol";
-import {IRebalancerManager} from "../src/interfaces/IRebalancerManager.sol";
 import {IInterestVault} from "../src/interfaces/IInterestVault.sol";
+import {IVaultManager} from "../src/interfaces/IVaultManager.sol";
 import {IProvider} from "../src/interfaces/IProvider.sol";
 
 // Test for RebalanceStrategy
 contract RebalanceStrategyTest is Test {
     RebalanceStrategy public strategy;  // instance of RebalanceStrategy used in tests
-    IRebalancerManager public manager;  // RebalancerManager strategy uses
+    IVaultManager public manager;       // VaultManager strategy has
     IInterestVault public vault;        // InterestVault strategy manages
-
-    // Error thrown by Ownable.onlyOwner
-    error OwnableUnauthorizedAccount(address account);
-
-    // Event expected to be emitted by RebalanceStrategy.performUpkeep()
-    event UpkeepPerformed(IProvider newProvider);
-    // Event expected to be emitted by RebalancerManager.allowExecutor()
-    event AllowExecutor(address indexed executor, bool allowed);
 
     // Called before each test
     function setUp() public {
@@ -27,7 +19,7 @@ contract RebalanceStrategyTest is Test {
         vm.createSelectFork(vm.envString("RPC_URL"));
         // get the vault and the manager contracts
         vault = IInterestVault(vm.envAddress("VAULT"));
-        manager = IRebalancerManager(vm.envAddress("REBALANCER_MANAGER"));
+        manager = IVaultManager(vm.envAddress("VAULT_MANAGER"));
         // instantiate strategy with the vault and the manager
         strategy = new RebalanceStrategy(vault, manager);
     }
@@ -132,12 +124,11 @@ contract RebalanceStrategyTest is Test {
 
     // Should perform upkeep correctly
     function test_CanPerformUpkeep() public {
-        // set strategy as executor in RebalancerManager, impersonating the admin of RebalancerManager
-        vm.startPrank(vm.envAddress("REBALANCER_MANAGER_ADMIN"));
-        vm.expectEmit(true, true, true, true);
-        emit AllowExecutor(address(strategy), true);
-        manager.allowExecutor(address(strategy), true);
+        // set strategy as executor in VaultManager, impersonating the admin of VaultManager
+        vm.startPrank(vm.envAddress("VAULT_MANAGER_ADMIN"));
+        manager.grantRole(manager.EXECUTOR_ROLE(), address(strategy));
         vm.stopPrank();
+        assertEq(manager.hasRole(manager.EXECUTOR_ROLE(), address(strategy)), true, "failed to set executor role");
         // set this test contract as the forwarder to perform the upkeep
         strategy.setForwarder(address(this));
         // get providers
@@ -152,7 +143,7 @@ contract RebalanceStrategyTest is Test {
         }
         // rebalance to the other provider
         vm.expectEmit(true, true, true, true);
-        emit UpkeepPerformed(provider);
+        emit RebalanceStrategy.UpkeepPerformed(provider);
         strategy.performUpkeep(abi.encode(provider));
         assertEq(address(strategy.vault().activeProvider()), address(provider), "active provider not updated");
     }

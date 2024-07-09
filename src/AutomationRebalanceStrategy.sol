@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {AutomationCompatibleInterface} from "chainlink/v0.8/automation/AutomationCompatible.sol";
 import {IProvider} from "./interfaces/IProvider.sol";
 import {IInterestVault} from "./interfaces/IInterestVault.sol";
-import {IRebalancerManager} from "./interfaces/IRebalancerManager.sol";
+import {IVaultManager} from "./interfaces/IVaultManager.sol";
 
 // This contract implements a rebalancing strategy for an interest vault.
 // It is designed to be integrated with Chainlink Automation.
@@ -13,7 +13,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
     // The interest vault to manage
     IInterestVault public vault;
     // The rebalancer manager responsible for the rebalancing process
-    IRebalancerManager public rebalancerManager;
+    IVaultManager public vaultManager;
     // The address of Chainlink's Forwarder contract that will be used to trigger performUpkeep()
     address public forwarder;
     // The minimal rebalance interval in seconds
@@ -31,9 +31,9 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
     event SettingsUpdated(uint256 minRebalanceInterval, uint256 minRebalanceDeltaRate);
 
 
-    constructor(IInterestVault _vault, IRebalancerManager _rebalancerManager) Ownable(msg.sender) {
+    constructor(IInterestVault _vault, IVaultManager _vaultManager) Ownable(msg.sender) {
         vault = _vault;
-        rebalancerManager = _rebalancerManager;
+        vaultManager = _vaultManager;
         // default rebalance settings
         minRebalanceInterval = 600;           // 10 minutes interval
         minRebalanceDeltaRate = 10**25;       // 1% rate delta
@@ -56,7 +56,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
     function performUpkeep(bytes calldata performData) external override {
         require(msg.sender == forwarder, "Only the forwarder can call this function");
         IProvider newProvider = abi.decode(performData, (IProvider));
-        rebalancerManager.rebalanceVault(vault, type(uint256).max, vault.activeProvider(), newProvider, 0, true);
+        vaultManager.rebalanceVault(vault, type(uint256).max, vault.activeProvider(), newProvider, 0, true);
         lastRebalance = block.timestamp;
         emit UpkeepPerformed(newProvider);
     }
