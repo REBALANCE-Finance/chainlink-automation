@@ -119,4 +119,11 @@ interface IInterestVault is IERC4626 {
         uint256 fee,
         bool activateToProvider
     ) external returns (bool);
+
+    /**
+     * @notice Transfers rewards to the rewards distributor.
+     *
+     * @param token The address of the rewards token.
+     */
+    function transferRewards(address token) external;
 }

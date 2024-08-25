@@ -8,7 +8,7 @@ import {IInterestVault} from "./interfaces/IInterestVault.sol";
 import {IVaultManager} from "./interfaces/IVaultManager.sol";
 
 // This contract implements a rebalancing strategy for an interest vault.
-// It is designed to be integrated with Chainlink Automation.
+// It is designed to be used as a Chainlink Automation Upkeep.
 contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
     // The interest vault to manage
     IInterestVault public vault;
