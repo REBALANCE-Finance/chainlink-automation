@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {RebalanceStrategy} from "../src/AutomationRebalanceStrategy.sol";
+import {RebalanceStrategy} from "../src/RebalanceStrategy.sol";
 import {IInterestVault} from "../src/interfaces/IInterestVault.sol";
 import {IVaultManager} from "../src/interfaces/IVaultManager.sol";
 import {IProvider} from "../src/interfaces/IProvider.sol";
