@@ -44,19 +44,15 @@ RebalanceStrategy must have the Executor role in VaultManager. After deploying t
 
 Every Vault should have its own instance of RebalanceStrategy. VaultManager is one for all Vaults.
 
-1. Make sure you've set the right Vault and VaultManager in `.env`. Load environment variables:
-
-    `source .env`
-
 1. Deploy the RebalanceStrategy contract:
 
     ```
-    forge create --rpc-url $RPC_URL \
-                 --constructor-args $VAULT $VAULT_MANAGER \
+    forge create --rpc-url <YOUR_CHAIN_RPC_URL> \
+                 --constructor-args <VAULT_ADDRESS> <VAULT_MANAGER_ADDRESS> \
                  --private-key <YOUR_PRIVATE_KEY> \
-                 --etherscan-api-key <YOUR_ETHERSCAN_API_KEY> \
+                 --etherscan-api-key <CHAIN_EXPLORER_API_KEY> \
                  --verify \
-                 src/AutomationRebalanceStrategy.sol:RebalanceStrategy
+                 src/RebalanceStrategy.sol:RebalanceStrategy
     ```
 
 1. Create Chainlink Upkeep with Custom Logic and set the deployed RebalanceStrategy address.
