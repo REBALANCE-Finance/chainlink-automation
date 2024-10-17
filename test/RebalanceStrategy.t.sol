@@ -171,5 +171,14 @@ contract RebalanceStrategyTest is Test {
         assertEq(should, false, "should rebalance is true");
         assertEq(address(newProvider), address(0), "new provider is not zero");
     }
+
+    // Should be able to unexclude providers
+    function test_CanUnexcludeProviders() public {
+        IProvider provider = strategy.vault().activeProvider();
+        strategy.excludeProvider(provider);
+        assertEq(strategy.isExcluded(provider), true, "provider not excluded");
+        strategy.unexcludeProvider(provider);
+        assertEq(strategy.isExcluded(provider), false, "provider not unexcluded");
+    }
 }
 

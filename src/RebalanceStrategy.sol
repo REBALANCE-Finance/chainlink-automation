@@ -57,6 +57,10 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
         isExcluded[_provider] = true;
     }
 
+    function unexcludeProvider(IProvider _provider) external onlyOwner {
+        isExcluded[_provider] = false;
+    }
+
     // Function called by Chainlink to perform the upkeep, i.e. rebalance the vault
     function performUpkeep(bytes calldata performData) external override {
         require(msg.sender == forwarder, "Only the forwarder can call this function");
