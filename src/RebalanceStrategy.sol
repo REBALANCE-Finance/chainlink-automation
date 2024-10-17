@@ -22,7 +22,8 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
     uint256 public minRebalanceDeltaRate;
     // The last time rebalance was performed
     uint256 public lastRebalance;
-
+    // The mapping of excluded providers that shall not be used
+    mapping(IProvider => bool) public isExcluded;
     // When rebalance is performed
     event UpkeepPerformed(IProvider newProvider);
     // When forwarder is set
@@ -50,6 +51,10 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
         minRebalanceInterval = _minRebalanceInterval;
         minRebalanceDeltaRate = _minRebalanceDeltaRate;
         emit SettingsUpdated(_minRebalanceInterval, _minRebalanceDeltaRate);
+    }
+
+    function excludeProvider(IProvider _provider) external onlyOwner {
+        isExcluded[_provider] = true;
     }
 
     // Function called by Chainlink to perform the upkeep, i.e. rebalance the vault
@@ -93,7 +98,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
         uint256 highestRate = 0;
         IProvider bestProvider;
         for (uint256 i = 0; i < rates.length; i++) {
-            if (rates[i] > highestRate) {
+            if (rates[i] > highestRate && !isExcluded[providers[i]]) {
                 highestRate = rates[i];
                 bestProvider = providers[i];
             }

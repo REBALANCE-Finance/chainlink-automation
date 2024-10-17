@@ -147,5 +147,29 @@ contract RebalanceStrategyTest is Test {
         strategy.performUpkeep(abi.encode(provider));
         assertEq(address(strategy.vault().activeProvider()), address(provider), "active provider not updated");
     }
+
+    // Should be able to exclude providers
+    function test_CanExcludeProviders() public {
+        IProvider provider = strategy.vault().activeProvider();
+        strategy.excludeProvider(provider);
+        assertEq(strategy.isExcluded(provider), true, "provider not excluded");
+    }
+
+    // Should not be able to exclude providers if not the owner
+    function test_CannotExcludeProvidersIfNotOwner() public {
+        bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+        vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
+        vm.prank(address(0));
+        strategy.excludeProvider(IProvider(address(0)));
+    }
+
+    // Excluded providers should not be used for rebalancing
+    function test_ExcludedProvidersAreNotUsed() public {
+        IProvider provider = strategy.vault().activeProvider();
+        strategy.excludeProvider(provider);
+        (bool should, IProvider newProvider) = strategy.shouldRebalance();
+        assertEq(should, false, "should rebalance is true");
+        assertEq(address(newProvider), address(0), "new provider is not zero");
+    }
 }
 
