@@ -3,20 +3,20 @@ pragma solidity ^0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AutomationCompatibleInterface} from "chainlink/v0.8/automation/AutomationCompatible.sol";
-import {IInterestVault} from "./interfaces/IInterestVault.sol";
+import {IVault} from "./interfaces/IVault.sol";
 
 // This contract transfers the rewards InterestVault has received to RewardDistributor.
 // It is designed to be used as a Chainlink Automation Upkeep.
 contract RewardTransferrer is AutomationCompatibleInterface {
     // The interest vault to monitor
-    IInterestVault public vault;
+    IVault public vault;
     // The reward token
     address public token;
 
     // When rewards transfer is performed
     event UpkeepPerformed();
 
-    constructor(IInterestVault _vault, address _token) {
+    constructor(IVault _vault, address _token) {
         vault = _vault;
         token = _token;
     }

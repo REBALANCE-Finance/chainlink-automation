@@ -7,7 +7,7 @@ pragma solidity ^0.8.23;
  * @notice Defines the interface of {VaultManager}.
  */
 
-import {IInterestVault} from "./IInterestVault.sol";
+import {IVault} from "./IVault.sol";
 import {IProvider} from "./IProvider.sol";
 
 interface IVaultManager {
@@ -49,7 +49,7 @@ interface IVaultManager {
         returns (bool);
 
     function rebalanceVault(
-        IInterestVault vault,
+        IVault vault,
         uint256 assets,
         IProvider from,
         IProvider to,

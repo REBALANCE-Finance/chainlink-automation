@@ -4,14 +4,14 @@ pragma solidity ^0.8.23;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {AutomationCompatibleInterface} from "chainlink/v0.8/automation/AutomationCompatible.sol";
 import {IProvider} from "./interfaces/IProvider.sol";
-import {IInterestVault} from "./interfaces/IInterestVault.sol";
+import {IVault} from "./interfaces/IVault.sol";
 import {IVaultManager} from "./interfaces/IVaultManager.sol";
 
 // This contract implements a rebalancing strategy for an interest vault.
 // It is designed to be used as a Chainlink Automation Upkeep.
 contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
     // The interest vault to manage
-    IInterestVault public vault;
+    IVault public vault;
     // The rebalancer manager responsible for the rebalancing process
     IVaultManager public vaultManager;
     // The address of Chainlink's Forwarder contract that will be used to trigger performUpkeep()
@@ -32,7 +32,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
     event SettingsUpdated(uint256 minRebalanceInterval, uint256 minRebalanceDeltaRate);
 
 
-    constructor(IInterestVault _vault, IVaultManager _vaultManager) Ownable(msg.sender) {
+    constructor(IVault _vault, IVaultManager _vaultManager) Ownable(msg.sender) {
         vault = _vault;
         vaultManager = _vaultManager;
         // default rebalance settings
@@ -97,7 +97,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
         IProvider[] memory providers = vault.getProviders();
         uint256[] memory rates = depositRates();
         IProvider activeProvider = vault.activeProvider();
-        uint256 activeRate = activeProvider.getDepositRateFor(vault);
+        uint256 activeRate = activeProvider.getDepositRate(vault);
         // find the best provider
         uint256 highestRate = 0;
         IProvider bestProvider;
@@ -123,7 +123,7 @@ contract RebalanceStrategy is AutomationCompatibleInterface, Ownable {
         IProvider[] memory providers = vault.getProviders();
         rates = new uint256[](providers.length);
         for (uint256 i = 0; i < providers.length; i++) {
-            rates[i] = providers[i].getDepositRateFor(vault);
+            rates[i] = providers[i].getDepositRate(vault);
         }
     }
 }
