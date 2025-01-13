@@ -6,9 +6,9 @@ The strategy is implemented in `src/AutomationRebalanceStrategy.sol` and is comp
 
 ## Access Control
 
-The strategy can only be used by Chainlink Forwarder. Chainlink creates a new Forwarder contract for every new Chainlink Upkeep, so after setting up the Upkeep you should set the Forwarder address in the RebalanceStrategy contract by calling `setForwarder(address)` right away.
+The strategy can only be used by Chainlink Forwarder. Chainlink creates a new Forwarder contract for every new Chainlink Upkeep, so after setting up the Upkeep you should set the Forwarder address in the RebalanceStrategy contract by calling `setForwarder(address)` right away. `setForwarder()` can only be called once. If you want to create a new Upkeep, you will have to deploy a new RebalanceStrategy contract.
 
-The RebalanceStrategy contract does not have any admin access. `setForwarder()` can only be called once, so once it's set, no one can affect the behavior of the contract. If you want to create a new Upkeep, you will have to deploy a new RebalanceStrategy contract.
+The owner of the RebalanceStrategy contract can update the rebalance settings by calling `updateSettings()` to change the rebalance interval and the minimum rate delta. This affects how often the rebalance will be performed.
 
 RebalanceStrategy must have the Executor role in VaultManager. After deploying the RebalanceStrategy contract and setting the Forwarder, make sure to grant it the Executor role in the VaultManager contract.
 
